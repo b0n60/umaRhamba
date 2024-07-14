@@ -1,7 +1,6 @@
 🛡️ umaRhamba - Dada ngesabhokwe kumaKhumsha
 
 Welcome to the umaRhamba cryptographic tool! Our goal is to provide a comprehensive, user-friendly, and secure application for cryptographic operations. This tool is developed with the assistance of leading markup text experts and overseen by Guido van Rossum, the inventor of Python. Below, you'll find an overview of the initial idea, what this tool currently offers, our future plans, and an open invitation to contributors.
-
 🎯 Purpose
 
 The umaRhamba tool is designed to help users perform various cryptographic operations, including:
@@ -43,6 +42,36 @@ Planned Features
     GUI Improvements: Use advanced GUI design principles and frameworks like PyQt6 for a modern, responsive user interface.
     Documentation: Develop detailed documentation and user guides, including setup, usage, and API documentation.
     Security Enhancements: Conduct regular security audits and penetration tests to ensure the tool's robustness and security.
+
+🔧 Installation
+Dependencies
+
+Ensure you have the following Python packages installed:
+
+sh
+
+pip install base64 argon2-cffi cryptography PySide6
+
+Running the Application
+
+    Clone the Repository:
+
+    sh
+
+git clone https://github.com/yourusername/umaRhamba.git
+cd umaRhamba
+
+Install Dependencies:
+
+sh
+
+pip install -r requirements.txt
+
+Run the Application:
+
+sh
+
+    python3 umaRhamba.py
 
 🤝 Invitation to Contributors
 
