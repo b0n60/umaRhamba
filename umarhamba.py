@@ -1,10 +1,11 @@
 import base64
 import logging
 import sys
-from hashlib import md5, sha1, sha224, sha256, sha384, sha512
+from hashlib import md5, sha1, sha3_256, sha224, sha256, sha384, sha512
 from typing import Any, Tuple
 
 from argon2 import PasswordHasher
+from Crypto.Hash import RIPEMD160  # PyCryptodome library
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import hashes, hmac, padding
 from cryptography.hazmat.primitives.asymmetric import ec, rsa
@@ -636,6 +637,100 @@ class CryptoApp(QMainWindow):
             self.identify_response.append(f"Payload exported as {file_name}")
         except Exception as e:
             self.identify_response.append(f"Export failed: {str(e)}")
+
+    def save_plain_text(self, text_entry: QLineEdit, layout: QVBoxLayout, name: str) -> None:
+        """Save the plain text input for later use."""
+        plain_text = text_entry.text()
+        layout.itemAt(layout.count() - 1).widget().append(f'Plain text saved for {name}: {plain_text}')
+
+    def encrypt_text(self, text_entry: QLineEdit, layout: QVBoxLayout, cipher_name: str) -> None:
+        """Encrypt the provided text using the specified cipher."""
+        plain_text = text_entry.text().encode()
+        encrypted_text = "Encryption not implemented for this cipher."
+
+        # Example encryption logic
+        if cipher_name == "AES":
+            key = b'Sixteen byte key'
+            cipher = Cipher(algorithms.AES(key), modes.ECB(), backend=default_backend())
+            encryptor = cipher.encryptor()
+            padder = padding.PKCS7(algorithms.AES.block_size).padder()
+            padded_data = padder.update(plain_text) + padder.finalize()
+            encrypted_text = encryptor.update(padded_data) + encryptor.finalize()
+            encrypted_text = base64.b64encode(encrypted_text).decode()
+
+        layout.itemAt(layout.count() - 1).widget().append(f'Encrypted text with {cipher_name}: {encrypted_text}')
+
+    def decrypt_text(self, text_entry: QLineEdit, layout: QVBoxLayout, cipher_name: str) -> None:
+        """Decrypt the provided text using the specified cipher."""
+        encrypted_text = text_entry.text().encode()
+        decrypted_text = "Decryption not implemented for this cipher."
+
+        # Example decryption logic
+        try:
+            if cipher_name == "AES":
+                key = b'Sixteen byte key'
+                cipher = Cipher(algorithms.AES(key), modes.ECB(), backend=default_backend())
+                decryptor = cipher.decryptor()
+                encrypted_data = base64.b64decode(encrypted_text)
+                unpadder = padding.PKCS7(algorithms.AES.block_size).unpadder()
+                decrypted_text = decryptor.update(encrypted_data) + decryptor.finalize()
+                decrypted_text = unpadder.update(decrypted_text) + unpadder.finalize()
+                decrypted_text = decrypted_text.decode()
+        except Exception as e:
+            decrypted_text = f"Decryption failed: {str(e)}"
+
+        layout.itemAt(layout.count() - 1).widget().append(f'Decrypted text with {cipher_name}: {decrypted_text}')
+
+    def hash_text(self, text_entry: QLineEdit, layout: QVBoxLayout, hash_name: str) -> None:
+        """Hash the provided text using the specified hash function."""
+        plain_text = text_entry.text().encode()
+        hashed_text = "Hashing not implemented for this hash function."
+
+        if hash_name == "MD5":
+            hashed_text = md5(plain_text).hexdigest()
+
+        elif hash_name == "SHA-1":
+            hashed_text = sha1(plain_text).hexdigest()
+
+        elif hash_name == "SHA-224":
+            hashed_text = sha224(plain_text).hexdigest()
+
+        elif hash_name == "SHA-256":
+            hashed_text = sha256(plain_text).hexdigest()
+
+        elif hash_name == "SHA-384":
+            hashed_text = sha384(plain_text).hexdigest()
+
+        elif hash_name == "SHA-512":
+            hashed_text = sha512(plain_text).hexdigest()
+
+        elif hash_name == "SHA-3":
+            hashed_text = sha3_256(plain_text).hexdigest()
+
+        elif hash_name == "RIPEMD":
+            hashed_text = RIPEMD160.new(plain_text).hexdigest()
+
+        elif hash_name == "Whirlpool":
+            hashed_text = whirlpool(plain_text).hexdigest()
+
+        layout.itemAt(layout.count() - 1).widget().append(f'Hashed text with {hash_name}: {hashed_text}')
+
+    def generate_mac(self, text_entry: QLineEdit, layout: QVBoxLayout, mac_name: str) -> None:
+        """Generate a MAC for the provided text using the specified algorithm."""
+        text = text_entry.text().encode()
+        mac_text = "MAC generation not implemented for this algorithm."
+
+        if mac_name == "HMAC":
+            key = b'secret'
+            h = hmac.HMAC(key, hashes.SHA256(), backend=default_backend())
+            h.update(text)
+            mac_text = h.finalize().hex()
+
+        layout.itemAt(layout.count() - 1).widget().append(f'Generated {mac_name}: {mac_text}')
+
+    def clear_output(self, layout: QVBoxLayout) -> None:
+        """Clear the output text area."""
+        layout.itemAt(layout.count() - 1).widget().clear()
 
     def get_description(self, name: str, type: str) -> str:
         """Get a description for the specified algorithm or encoder."""
