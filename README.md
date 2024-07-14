@@ -54,20 +54,20 @@ pip install base64 argon2-cffi cryptography PySide6
 
 Running the Application
 
-    Clone the Repository:
+Clone the Repository:
 
 sh
 
 git clone https://github.com/yourusername/umaRhamba.git
 cd umaRhamba
 
-    Install Dependencies:
+Install Dependencies:
 
 sh
 
 pip install -r requirements.txt
 
-    Run the Application:
+Run the Application:
 
 sh
 
