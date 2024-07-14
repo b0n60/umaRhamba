@@ -1,7 +1,6 @@
 🛡️ umaRhamba - Dada ngesabhokwe kumaKhumsha
 
 Welcome to the umaRhamba cryptographic tool! Our goal is to provide a comprehensive, user-friendly, and secure application for cryptographic operations. Below, you'll find an overview of the initial idea, what this tool currently offers, our future plans, and an open invitation to contributors. 🎉
-
 🎯 Purpose
 
 The umaRhamba tool is designed to help users perform various cryptographic operations, including:
@@ -55,20 +54,20 @@ pip install base64 argon2-cffi cryptography PySide6
 
 Running the Application
 
-Clone the Repository:
+    Clone the Repository:
 
 sh
 
 git clone https://github.com/yourusername/umaRhamba.git
 cd umaRhamba
 
-Install Dependencies:
+    Install Dependencies:
 
 sh
 
 pip install -r requirements.txt
 
-Run the Application:
+    Run the Application:
 
 sh
 
