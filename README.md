@@ -48,22 +48,16 @@ To get started with umaRhamba, follow these installation steps:
     ![Alt Text](https://github.com/b0n60/umaRhamba/blob/main/umaRgamba-Dashboard.png)
 
 - **Symmetric Key Ciphers**: Encrypt and decrypt data using symmetric key algorithms.
-    ![Alt Text](https://github.com/b0n60/umaRhamba/blob/main/umaRgamba-Keys.png)
 
 - **Asymmetric Key Ciphers**: Use asymmetric algorithms for secure data transmission.
-    ![Asymmetric Key Ciphers](placeholder_for_asymmetric_ciphers_image)
 
 - **Hash Functions**: Generate and verify hash values.
-    ![Hash Functions](placeholder_for_hash_functions_image)
 
 - **MACs**: Generate Message Authentication Codes to ensure data integrity and authenticity.
-    ![MACs](placeholder_for_macs_image)
 
 - **Encoders**: Encode and decode data using various schemes.
-    ![Encoders](placeholder_for_encoders_image)
 
 - **File Upload**: Upload files for obfuscation or steganography.
-    ![File Upload](placeholder_for_file_upload_image)
 
 ## Roadmap 🛣️
 
