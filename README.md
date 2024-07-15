@@ -48,7 +48,7 @@ To get started with umaRhamba, follow these installation steps:
     ![Alt Text](https://github.com/b0n60/umaRhamba/blob/main/umaRgamba-Dashboard.png)
 
 - **Symmetric Key Ciphers**: Encrypt and decrypt data using symmetric key algorithms.
-    ![Symmetric Key Ciphers](placeholder_for_symmetric_ciphers_image)
+    ![Alt Text](https://github.com/b0n60/umaRhamba/blob/main/umaRgamba-Keys.png)
 
 - **Asymmetric Key Ciphers**: Use asymmetric algorithms for secure data transmission.
     ![Asymmetric Key Ciphers](placeholder_for_asymmetric_ciphers_image)
