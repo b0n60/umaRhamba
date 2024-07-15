@@ -1,11 +1,13 @@
 import base64
 import logging
+import re
 import sys
 from hashlib import md5, sha1, sha3_256, sha224, sha256, sha384, sha512
 from typing import Any, Tuple
 
 from argon2 import PasswordHasher
 from Crypto.Hash import RIPEMD160  # PyCryptodome library
+from cryptography.exceptions import InvalidKey, InvalidSignature, InvalidTag
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import hashes, hmac, padding
 from cryptography.hazmat.primitives.asymmetric import ec, rsa
@@ -13,22 +15,10 @@ from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 from cryptography.hazmat.primitives.kdf.scrypt import Scrypt
 from PySide6.QtGui import QIcon
-from PySide6.QtWidgets import (
-    QApplication,
-    QFormLayout,
-    QFrame,
-    QHBoxLayout,
-    QLabel,
-    QLineEdit,
-    QMainWindow,
-    QPushButton,
-    QSizePolicy,
-    QSpacerItem,
-    QTabWidget,
-    QTextEdit,
-    QVBoxLayout,
-    QWidget,
-)
+from PySide6.QtWidgets import (QApplication, QFormLayout, QFrame, QHBoxLayout,
+                               QLabel, QLineEdit, QMainWindow, QPushButton,
+                               QSizePolicy, QSpacerItem, QTabWidget, QTextEdit,
+                               QVBoxLayout, QWidget)
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
@@ -94,40 +84,27 @@ class CryptoApp(QMainWindow):
 
     def init_main_tabs(self) -> None:
         """Initialize the main tabs of the application."""
-        self.dashboard_tab = QWidget()
-        self.symmetric_tab = QWidget()
-        self.asymmetric_tab = QWidget()
-        self.hash_tab = QWidget()
-        self.mac_tab = QWidget()
-        self.other_ciphers_tab = QWidget()
-        self.network_tab = QWidget()
-        self.crypto_algorithms_tab = QWidget()
-        self.encoders_tab = QWidget()
+        tab_definitions = [
+            ("Dashboard", self.init_dashboard_tab),
+            ("Symmetric Key Ciphers", self.init_symmetric_tab),
+            ("Asymmetric Key Ciphers", self.init_asymmetric_tab),
+            ("Hash Functions", self.init_hash_tab),
+            ("MACs", self.init_mac_tab),
+            ("Other Ciphers", self.init_other_ciphers_tab),
+            ("Networking Protocols", self.init_network_tab),
+            ("Crypto Algorithms", self.init_crypto_algorithms_tab),
+            ("Encoders", self.init_encoders_tab),
+        ]
 
-        self.main_tabs.addTab(self.dashboard_tab, "Dashboard")
-        self.main_tabs.addTab(self.symmetric_tab, "Symmetric Key Ciphers")
-        self.main_tabs.addTab(self.asymmetric_tab, "Asymmetric Key Ciphers")
-        self.main_tabs.addTab(self.hash_tab, "Hash Functions")
-        self.main_tabs.addTab(self.mac_tab, "MACs")
-        self.main_tabs.addTab(self.other_ciphers_tab, "Other Ciphers")
-        self.main_tabs.addTab(self.network_tab, "Networking Protocols")
-        self.main_tabs.addTab(self.crypto_algorithms_tab, "Crypto Algorithms")
-        self.main_tabs.addTab(self.encoders_tab, "Encoders")
+        for name, method in tab_definitions:
+            tab = QWidget()
+            method(tab)
+            self.main_tabs.addTab(tab, name)
 
-        self.init_dashboard_tab()
-        self.init_symmetric_tab()
-        self.init_asymmetric_tab()
-        self.init_hash_tab()
-        self.init_mac_tab()
-        self.init_other_ciphers_tab()
-        self.init_network_tab()
-        self.init_crypto_algorithms_tab()
-        self.init_encoders_tab()
-
-    def init_dashboard_tab(self) -> None:
+    def init_dashboard_tab(self, tab: QWidget) -> None:
         """Initialize the dashboard tab."""
         layout = QVBoxLayout()
-        self.dashboard_tab.setLayout(layout)
+        tab.setLayout(layout)
 
         description = QLabel("<h3>Dashboard Overview</h3><p>This tab provides an overview of the activity within the app, including an input field to identify hashes, encoders, and ciphers associated with encryption.</p>")
         description.setWordWrap(True)
@@ -150,131 +127,128 @@ class CryptoApp(QMainWindow):
         identify_button.clicked.connect(self.identify_text)
         input_layout.addWidget(identify_button)
 
+        clear_button = QPushButton("Clear Output")
+        clear_button.clicked.connect(self.clear_output)
+        input_layout.addWidget(clear_button)
+
         layout.addLayout(input_layout)
 
         self.identify_response = QTextEdit()
         self.identify_response.setReadOnly(True)
         layout.addWidget(self.identify_response)
 
-    def init_symmetric_tab(self) -> None:
+    def identify_text(self) -> None:
+        """Identify the type of the provided text."""
+        text = self.identify_entry.text().strip()
+        
+        if not text:
+            self.identify_response.setText("Please enter a text to identify.")
+            return
+        
+        identifier = self.get_identifier_type(text)
+        
+        if identifier:
+            identified = f"Identified type for '{text}': {identifier}"
+        else:
+            identified = f"Could not identify the type for '{text}'."
+        
+        self.identify_response.setText(identified)
+
+    def get_identifier_type(self, text: str) -> str:
+        """Identify the type of hash, encoder, or cipher based on its characteristics."""
+        hash_patterns = {
+            'MD5': re.compile(r'^[a-f0-9]{32}$', re.IGNORECASE),
+            'SHA-1': re.compile(r'^[a-f0-9]{40}$', re.IGNORECASE),
+            'SHA-224': re.compile(r'^[a-f0-9]{56}$', re.IGNORECASE),
+            'SHA-256': re.compile(r'^[a-f0-9]{64}$', re.IGNORECASE),
+            'SHA-384': re.compile(r'^[a-f0-9]{96}$', re.IGNORECASE),
+            'SHA-512': re.compile(r'^[a-f0-9]{128}$', re.IGNORECASE),
+            'SHA-3-256': re.compile(r'^[a-f0-9]{64}$', re.IGNORECASE),  # Same length as SHA-256
+            'SHA-3-512': re.compile(r'^[a-f0-9]{128}$', re.IGNORECASE), # Same length as SHA-512
+            'RIPEMD-160': re.compile(r'^[a-f0-9]{40}$', re.IGNORECASE),
+            'Whirlpool': re.compile(r'^[a-f0-9]{128}$', re.IGNORECASE),  # Same length as SHA-512
+        }
+        
+        for hash_type, pattern in hash_patterns.items():
+            if pattern.match(text):
+                return hash_type
+        
+        # Check for encoders
+        if self.is_base64(text):
+            return 'Base64'
+        if self.is_hex(text):
+            return 'Hex'
+        
+        return None
+
+    def is_base64(self, s: str) -> bool:
+        """Check if the string is Base64 encoded."""
+        try:
+            if base64.b64encode(base64.b64decode(s)).decode() == s:
+                return True
+        except Exception:
+            pass
+        return False
+
+    def is_hex(self, s: str) -> bool:
+        """Check if the string is hex encoded."""
+        try:
+            bytes.fromhex(s)
+            return True
+        except ValueError:
+            return False
+
+    def init_symmetric_tab(self, tab: QWidget) -> None:
         """Initialize the symmetric key ciphers tab."""
-        self.symmetric_tab_layout = QVBoxLayout()
-        self.symmetric_tab.setLayout(self.symmetric_tab_layout)
+        self.setup_tabs(tab, "Symmetric Key Cipher", ["DES", "3DES", "AES", "Blowfish", "Twofish", "IDEA", "RC5", "RC6", "RC4", "Salsa20", "ChaCha20"])
 
-        self.symmetric_sub_tabs = QTabWidget()
-        self.symmetric_tab_layout.addWidget(self.symmetric_sub_tabs)
-
-        ciphers = ["DES", "3DES", "AES", "Blowfish", "Twofish", "IDEA", "RC5", "RC6", "RC4", "Salsa20", "ChaCha20"]
-
-        for cipher in ciphers:
-            tab = QWidget()
-            self.symmetric_sub_tabs.addTab(tab, cipher)
-            self.setup_cipher_tab(tab, cipher, "Symmetric")
-
-    def init_asymmetric_tab(self) -> None:
+    def init_asymmetric_tab(self, tab: QWidget) -> None:
         """Initialize the asymmetric key ciphers tab."""
-        self.asymmetric_tab_layout = QVBoxLayout()
-        self.asymmetric_tab.setLayout(self.asymmetric_tab_layout)
+        self.setup_tabs(tab, "Asymmetric Key Cipher", ["RSA", "DSA", "Diffie-Hellman", "ECDSA", "ECDH"])
 
-        self.asymmetric_sub_tabs = QTabWidget()
-        self.asymmetric_tab_layout.addWidget(self.asymmetric_sub_tabs)
-
-        ciphers = ["RSA", "DSA", "Diffie-Hellman", "ECDSA", "ECDH"]
-
-        for cipher in ciphers:
-            tab = QWidget()
-            self.asymmetric_sub_tabs.addTab(tab, cipher)
-            self.setup_cipher_tab(tab, cipher, "Asymmetric")
-
-    def init_hash_tab(self) -> None:
+    def init_hash_tab(self, tab: QWidget) -> None:
         """Initialize the hash functions tab."""
-        self.hash_tab_layout = QVBoxLayout()
-        self.hash_tab.setLayout(self.hash_tab_layout)
+        self.setup_tabs(tab, "Hash Function", ["MD5", "SHA-1", "SHA-224", "SHA-256", "SHA-384", "SHA-512", "SHA-3", "RIPEMD", "Whirlpool"])
 
-        self.hash_sub_tabs = QTabWidget()
-        self.hash_tab_layout.addWidget(self.hash_sub_tabs)
-
-        hashes = ["MD5", "SHA-1", "SHA-224", "SHA-256", "SHA-384", "SHA-512", "SHA-3", "RIPEMD", "Whirlpool"]
-
-        for hash_alg in hashes:
-            tab = QWidget()
-            self.hash_sub_tabs.addTab(tab, hash_alg)
-            self.setup_hash_tab(tab, hash_alg)
-
-    def init_mac_tab(self) -> None:
+    def init_mac_tab(self, tab: QWidget) -> None:
         """Initialize the MACs (Message Authentication Codes) tab."""
-        self.mac_tab_layout = QVBoxLayout()
-        self.mac_tab.setLayout(self.mac_tab_layout)
+        self.setup_tabs(tab, "MAC", ["HMAC", "CMAC", "GMAC"])
 
-        self.mac_sub_tabs = QTabWidget()
-        self.mac_tab_layout.addWidget(self.mac_sub_tabs)
-
-        macs = ["HMAC", "CMAC", "GMAC"]
-
-        for mac in macs:
-            tab = QWidget()
-            self.mac_sub_tabs.addTab(tab, mac)
-            self.setup_mac_tab(tab, mac)
-
-    def init_other_ciphers_tab(self) -> None:
+    def init_other_ciphers_tab(self, tab: QWidget) -> None:
         """Initialize the other ciphers tab."""
-        self.other_ciphers_tab_layout = QVBoxLayout()
-        self.other_ciphers_tab.setLayout(self.other_ciphers_tab_layout)
+        self.setup_tabs(tab, "Other Cipher", ["OTP", "Vigenère", "Playfair"])
 
-        self.other_ciphers_sub_tabs = QTabWidget()
-        self.other_ciphers_tab_layout.addWidget(self.other_ciphers_sub_tabs)
-
-        ciphers = ["OTP", "Vigenère", "Playfair"]
-
-        for cipher in ciphers:
-            tab = QWidget()
-            self.other_ciphers_sub_tabs.addTab(tab, cipher)
-            self.setup_cipher_tab(tab, cipher, "Other")
-
-    def init_network_tab(self) -> None:
+    def init_network_tab(self, tab: QWidget) -> None:
         """Initialize the networking protocols tab."""
-        self.network_tab_layout = QVBoxLayout()
-        self.network_tab.setLayout(self.network_tab_layout)
+        self.setup_tabs(tab, "Network Protocol", ["TLS/SSL", "IPsec", "SSH", "OpenVPN", "HTTPS"])
 
-        self.network_sub_tabs = QTabWidget()
-        self.network_tab_layout.addWidget(self.network_sub_tabs)
-
-        protocols = ["TLS/SSL", "IPsec", "SSH", "OpenVPN", "HTTPS"]
-
-        for protocol in protocols:
-            tab = QWidget()
-            self.network_sub_tabs.addTab(tab, protocol)
-            self.setup_network_tab(tab, protocol)
-
-    def init_crypto_algorithms_tab(self) -> None:
+    def init_crypto_algorithms_tab(self, tab: QWidget) -> None:
         """Initialize the crypto algorithms tab."""
-        self.crypto_algorithms_tab_layout = QVBoxLayout()
-        self.crypto_algorithms_tab.setLayout(self.crypto_algorithms_tab_layout)
+        self.setup_tabs(tab, "Crypto Algorithm", ["PGP", "GPG", "Kerberos"])
 
-        self.crypto_algorithms_sub_tabs = QTabWidget()
-        self.crypto_algorithms_tab_layout.addWidget(self.crypto_algorithms_sub_tabs)
-
-        algorithms = ["PGP", "GPG", "Kerberos"]
-
-        for algorithm in algorithms:
-            tab = QWidget()
-            self.crypto_algorithms_sub_tabs.addTab(tab, algorithm)
-            self.setup_crypto_algorithm_tab(tab, algorithm)
-
-    def init_encoders_tab(self) -> None:
+    def init_encoders_tab(self, tab: QWidget) -> None:
         """Initialize the encoders tab."""
-        self.encoders_tab_layout = QVBoxLayout()
-        self.encoders_tab.setLayout(self.encoders_tab_layout)
+        self.setup_tabs(tab, "Encoder", ["Base64", "Hex", "Steganography", "URL", "Obfuscation"])
 
-        self.encoders_sub_tabs = QTabWidget()
-        self.encoders_tab_layout.addWidget(self.encoders_sub_tabs)
+    def setup_tabs(self, parent_tab: QWidget, item_type: str, items: list) -> None:
+        """General method to set up tabs for different types of items."""
+        tab_layout = QVBoxLayout()
+        parent_tab.setLayout(tab_layout)
 
-        encoders = ["Base64", "Hex", "URL", "Obfuscation"]
+        sub_tabs = QTabWidget()
+        tab_layout.addWidget(sub_tabs)
 
-        for encoder in encoders:
+        for item in items:
             tab = QWidget()
-            self.encoders_sub_tabs.addTab(tab, encoder)
-            self.setup_encoder_tab(tab, encoder)
+            sub_tabs.addTab(tab, item)
+            if item_type == "Symmetric Key Cipher" or item_type == "Asymmetric Key Cipher" or item_type == "Other Cipher" or item_type == "Network Protocol" or item_type == "Crypto Algorithm":
+                self.setup_cipher_tab(tab, item, item_type)
+            elif item_type == "Hash Function":
+                self.setup_hash_tab(tab, item)
+            elif item_type == "MAC":
+                self.setup_mac_tab(tab, item)
+            elif item_type == "Encoder":
+                self.setup_encoder_tab(tab, item)
 
     def setup_cipher_tab(self, tab: QWidget, cipher_name: str, cipher_type: str) -> None:
         """Set up a tab for a specific cipher."""
@@ -482,98 +456,6 @@ class CryptoApp(QMainWindow):
             response.setReadOnly(True)
             layout.addWidget(response)
 
-    def setup_network_tab(self, tab: QWidget, protocol_name: str) -> None:
-        """Set up a tab for a specific networking protocol."""
-        layout = QVBoxLayout()
-        tab.setLayout(layout)
-
-        description = QLabel(f"<h3>{protocol_name}</h3><p>{self.get_description(protocol_name, 'Network')}</p>")
-        description.setWordWrap(True)
-        layout.addWidget(description)
-
-        instructions = QLabel(f"<p><b>Instructions:</b><br>"
-                              f"1. Enter the text you want to encrypt with {protocol_name} in the input field.<br>"
-                              f"2. Click the 'Save' button to save the plain text.<br>"
-                              f"3. Click the 'Encrypt with {protocol_name}' button to encrypt the text.<br>"
-                              f"4. The encrypted text will be displayed in the text area below.<br>"
-                              f"5. Use the 'Clear Output' button to clear the output area.<br>"
-                              f"6. Use the 'Decrypt with {protocol_name}' button to decrypt the text.</p>")
-        instructions.setWordWrap(True)
-        layout.addWidget(instructions)
-
-        input_layout = QHBoxLayout()
-        text_entry = QLineEdit()
-        text_entry.setPlaceholderText(f"Enter text to encrypt with {protocol_name}")
-        input_layout.addWidget(text_entry)
-
-        save_button = QPushButton("Save")
-        save_button.clicked.connect(lambda: self.save_plain_text(text_entry, layout, protocol_name))
-        input_layout.addWidget(save_button)
-
-        layout.addLayout(input_layout)
-
-        encrypt_button = QPushButton(f"Encrypt with {protocol_name}")
-        encrypt_button.clicked.connect(lambda: self.encrypt_text(text_entry, layout, protocol_name))
-        layout.addWidget(encrypt_button)
-
-        decrypt_button = QPushButton(f"Decrypt with {protocol_name}")
-        decrypt_button.clicked.connect(lambda: self.decrypt_text(text_entry, layout, protocol_name))
-        layout.addWidget(decrypt_button)
-
-        clear_button = QPushButton("Clear Output")
-        clear_button.clicked.connect(lambda: self.clear_output(layout))
-        layout.addWidget(clear_button)
-
-        response = QTextEdit()
-        response.setReadOnly(True)
-        layout.addWidget(response)
-
-    def setup_crypto_algorithm_tab(self, tab: QWidget, algorithm_name: str) -> None:
-        """Set up a tab for a specific crypto algorithm."""
-        layout = QVBoxLayout()
-        tab.setLayout(layout)
-
-        description = QLabel(f"<h3>{algorithm_name}</h3><p>{self.get_description(algorithm_name, 'Algorithm')}</p>")
-        description.setWordWrap(True)
-        layout.addWidget(description)
-
-        instructions = QLabel(f"<p><b>Instructions:</b><br>"
-                              f"1. Enter the text you want to encrypt with {algorithm_name} in the input field.<br>"
-                              f"2. Click the 'Save' button to save the plain text.<br>"
-                              f"3. Click the 'Encrypt with {algorithm_name}' button to encrypt the text.<br>"
-                              f"4. The encrypted text will be displayed in the text area below.<br>"
-                              f"5. Use the 'Clear Output' button to clear the output area.<br>"
-                              f"6. Use the 'Decrypt with {algorithm_name}' button to decrypt the text.</p>")
-        instructions.setWordWrap(True)
-        layout.addWidget(instructions)
-
-        input_layout = QHBoxLayout()
-        text_entry = QLineEdit()
-        text_entry.setPlaceholderText(f"Enter text to encrypt with {algorithm_name}")
-        input_layout.addWidget(text_entry)
-
-        save_button = QPushButton("Save")
-        save_button.clicked.connect(lambda: self.save_plain_text(text_entry, layout, algorithm_name))
-        input_layout.addWidget(save_button)
-
-        layout.addLayout(input_layout)
-
-        encrypt_button = QPushButton(f"Encrypt with {algorithm_name}")
-        encrypt_button.clicked.connect(lambda: self.encrypt_text(text_entry, layout, algorithm_name))
-        layout.addWidget(encrypt_button)
-
-        decrypt_button = QPushButton(f"Decrypt with {algorithm_name}")
-        decrypt_button.clicked.connect(lambda: self.decrypt_text(text_entry, layout, algorithm_name))
-        layout.addWidget(decrypt_button)
-
-        clear_button = QPushButton("Clear Output")
-        clear_button.clicked.connect(lambda: self.clear_output(layout))
-        layout.addWidget(clear_button)
-
-        response = QTextEdit()
-        response.setReadOnly(True)
-        layout.addWidget(response)
-
     def encode_text(self, text_entry: QLineEdit, layout: QVBoxLayout, encoder_name: str) -> None:
         """Encode the provided text using the specified encoder."""
         plain_text = text_entry.text().encode()
@@ -586,6 +468,10 @@ class CryptoApp(QMainWindow):
 
         elif encoder_name == "URL":
             encoded_text = base64.urlsafe_b64encode(plain_text).decode()
+
+        elif encoder_name == "Steganography":
+            # Placeholder for steganography encoding
+            encoded_text = "Steganography encoding not implemented."
 
         else:
             encoded_text = "Encoding not implemented for this encoder."
@@ -606,19 +492,16 @@ class CryptoApp(QMainWindow):
             elif encoder_name == "URL":
                 decoded_text = base64.urlsafe_b64decode(encoded_text).decode()
 
+            elif encoder_name == "Steganography":
+                # Placeholder for steganography decoding
+                decoded_text = "Steganography decoding not implemented."
+
             else:
                 decoded_text = "Decoding not implemented for this encoder."
         except Exception as e:
             decoded_text = f"Decoding failed: {str(e)}"
 
         layout.itemAt(layout.count() - 1).widget().append(f'Decoded text with {encoder_name}: {decoded_text}')
-
-    def identify_text(self) -> None:
-        """Identify the type of the provided text."""
-        text = self.identify_entry.text()
-        # Placeholder for identification logic
-        identified = f"Identified type for '{text}'"
-        self.identify_response.setText(identified)
 
     def obfuscate_and_export(self) -> None:
         """Obfuscate the provided text and export it in the specified format."""
@@ -648,15 +531,20 @@ class CryptoApp(QMainWindow):
         plain_text = text_entry.text().encode()
         encrypted_text = "Encryption not implemented for this cipher."
 
-        # Example encryption logic
-        if cipher_name == "AES":
-            key = b'Sixteen byte key'
-            cipher = Cipher(algorithms.AES(key), modes.ECB(), backend=default_backend())
-            encryptor = cipher.encryptor()
-            padder = padding.PKCS7(algorithms.AES.block_size).padder()
-            padded_data = padder.update(plain_text) + padder.finalize()
-            encrypted_text = encryptor.update(padded_data) + encryptor.finalize()
-            encrypted_text = base64.b64encode(encrypted_text).decode()
+        try:
+            if cipher_name == "AES":
+                key = b'Sixteen byte key'
+                iv = b'Sixteen byte iv.'  # Using CBC mode with an IV
+                cipher = Cipher(algorithms.AES(key), modes.CBC(iv), backend=default_backend())
+                encryptor = cipher.encryptor()
+                padder = padding.PKCS7(algorithms.AES.block_size).padder()
+                padded_data = padder.update(plain_text) + padder.finalize()
+                encrypted_text = encryptor.update(padded_data) + encryptor.finalize()
+                encrypted_text = base64.b64encode(encrypted_text).decode()
+        except (InvalidKey, InvalidSignature, InvalidTag) as e:
+            encrypted_text = f"Encryption failed: {str(e)}"
+        except Exception as e:
+            encrypted_text = f"Encryption failed: {str(e)}"
 
         layout.itemAt(layout.count() - 1).widget().append(f'Encrypted text with {cipher_name}: {encrypted_text}')
 
@@ -665,17 +553,19 @@ class CryptoApp(QMainWindow):
         encrypted_text = text_entry.text().encode()
         decrypted_text = "Decryption not implemented for this cipher."
 
-        # Example decryption logic
         try:
             if cipher_name == "AES":
                 key = b'Sixteen byte key'
-                cipher = Cipher(algorithms.AES(key), modes.ECB(), backend=default_backend())
+                iv = b'Sixteen byte iv.'  # Using CBC mode with an IV
+                cipher = Cipher(algorithms.AES(key), modes.CBC(iv), backend=default_backend())
                 decryptor = cipher.decryptor()
                 encrypted_data = base64.b64decode(encrypted_text)
                 unpadder = padding.PKCS7(algorithms.AES.block_size).unpadder()
                 decrypted_text = decryptor.update(encrypted_data) + decryptor.finalize()
                 decrypted_text = unpadder.update(decrypted_text) + unpadder.finalize()
                 decrypted_text = decrypted_text.decode()
+        except (InvalidKey, InvalidSignature, InvalidTag) as e:
+            decrypted_text = f"Decryption failed: {str(e)}"
         except Exception as e:
             decrypted_text = f"Decryption failed: {str(e)}"
 
@@ -686,32 +576,35 @@ class CryptoApp(QMainWindow):
         plain_text = text_entry.text().encode()
         hashed_text = "Hashing not implemented for this hash function."
 
-        if hash_name == "MD5":
-            hashed_text = md5(plain_text).hexdigest()
+        try:
+            if hash_name == "MD5":
+                hashed_text = md5(plain_text).hexdigest()
 
-        elif hash_name == "SHA-1":
-            hashed_text = sha1(plain_text).hexdigest()
+            elif hash_name == "SHA-1":
+                hashed_text = sha1(plain_text).hexdigest()
 
-        elif hash_name == "SHA-224":
-            hashed_text = sha224(plain_text).hexdigest()
+            elif hash_name == "SHA-224":
+                hashed_text = sha224(plain_text).hexdigest()
 
-        elif hash_name == "SHA-256":
-            hashed_text = sha256(plain_text).hexdigest()
+            elif hash_name == "SHA-256":
+                hashed_text = sha256(plain_text).hexdigest()
 
-        elif hash_name == "SHA-384":
-            hashed_text = sha384(plain_text).hexdigest()
+            elif hash_name == "SHA-384":
+                hashed_text = sha384(plain_text).hexdigest()
 
-        elif hash_name == "SHA-512":
-            hashed_text = sha512(plain_text).hexdigest()
+            elif hash_name == "SHA-512":
+                hashed_text = sha512(plain_text).hexdigest()
 
-        elif hash_name == "SHA-3":
-            hashed_text = sha3_256(plain_text).hexdigest()
+            elif hash_name == "SHA-3":
+                hashed_text = sha3_256(plain_text).hexdigest()
 
-        elif hash_name == "RIPEMD":
-            hashed_text = RIPEMD160.new(plain_text).hexdigest()
+            elif hash_name == "RIPEMD":
+                hashed_text = RIPEMD160.new(plain_text).hexdigest()
 
-        elif hash_name == "Whirlpool":
-            hashed_text = whirlpool(plain_text).hexdigest()
+            elif hash_name == "Whirlpool":
+                hashed_text = whirlpool(plain_text)
+        except Exception as e:
+            hashed_text = f"Hashing failed: {str(e)}"
 
         layout.itemAt(layout.count() - 1).widget().append(f'Hashed text with {hash_name}: {hashed_text}')
 
@@ -720,11 +613,14 @@ class CryptoApp(QMainWindow):
         text = text_entry.text().encode()
         mac_text = "MAC generation not implemented for this algorithm."
 
-        if mac_name == "HMAC":
-            key = b'secret'
-            h = hmac.HMAC(key, hashes.SHA256(), backend=default_backend())
-            h.update(text)
-            mac_text = h.finalize().hex()
+        try:
+            if mac_name == "HMAC":
+                key = b'secret'
+                h = hmac.HMAC(key, hashes.SHA256(), backend=default_backend())
+                h.update(text)
+                mac_text = h.finalize().hex()
+        except Exception as e:
+            mac_text = f"MAC generation failed: {str(e)}"
 
         layout.itemAt(layout.count() - 1).widget().append(f'Generated {mac_name}: {mac_text}')
 
@@ -770,6 +666,12 @@ class CryptoApp(QMainWindow):
         }
         desc = descriptions.get(name, (f"{type} description not available.", "Use Cases: Not available."))
         return f"{desc[0]}<br><b>Use Cases:</b> {desc[1]}"
+
+def whirlpool(data: bytes) -> str:
+    """Compute the Whirlpool hash of the given data."""
+    # Whirlpool implementation (simplified for the purpose of this example)
+    import hashlib
+    return hashlib.new('whirlpool', data).hexdigest()
 
 def main() -> None:
     """Main entry point of the application."""
