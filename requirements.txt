@@ -1,5 +1,4 @@
-PySide6
-cryptography
-argon2-cffi
-pycryptodome
-whirlpool
+PySide6==6.2.2
+argon2-cffi==21.1.0
+pycryptodome==3.10.4
+cryptography==36.0.0
