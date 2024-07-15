@@ -2,7 +2,7 @@
 
 Welcome to **umaRhamba**! This open-source _cryptographic tool_ is designed to aid pen testers, blue-teamers, red-teamers, and network engineers in their cryptographic operations. Our goal is to provide a robust, efficient, and user-friendly solution for various encryption, encoding, hashing, and other cryptographic needs. 🌟
 
-![umaRhamba Logo](placeholder_for_logo_image)
+![Alt Text](https://github.com/b0n60/umaRhamba/blob/main/umaRhamba.webp)
 
 ## Features
 
