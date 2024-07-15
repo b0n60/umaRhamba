@@ -39,7 +39,7 @@ To get started with umaRhamba, follow these installation steps:
 
 4. **Run the Application**
     ```sh
-    umarhamba.py
+    python3 umarhamba.py
     ```
 
 ## Usage
