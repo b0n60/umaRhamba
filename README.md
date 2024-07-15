@@ -24,7 +24,7 @@ To get started with umaRhamba, follow these installation steps:
 
 1. **Clone the Repository**
     ```sh
-    git clone https://github.com/yourusername/umaRhamba.git
+    git clone https://github.com/b0n60/umaRhamba.git
     ```
 
 2. **Navigate to the Project Directory**
@@ -39,7 +39,7 @@ To get started with umaRhamba, follow these installation steps:
 
 4. **Run the Application**
     ```sh
-    python main.py
+    umarhamba.py
     ```
 
 ## Usage
