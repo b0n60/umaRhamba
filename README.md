@@ -45,7 +45,7 @@ To get started with umaRhamba, follow these installation steps:
 ## Usage
 
 - **Dashboard**: Provides an overview of activities and tools to identify various cryptographic elements.
-    ![Dashboard](placeholder_for_dashboard_image)
+    ![Alt Text](https://github.com/b0n60/umaRhamba/blob/main/umaRgamba-Dashboard.png)
 
 - **Symmetric Key Ciphers**: Encrypt and decrypt data using symmetric key algorithms.
     ![Symmetric Key Ciphers](placeholder_for_symmetric_ciphers_image)
