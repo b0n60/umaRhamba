@@ -1,86 +1,107 @@
-🛡️ umaRhamba - Dada ngesabhokwe kumaKhumsha
+# umaRhamba - Dada ngesaBhokwe kumaKhumsha 🔐
 
-Welcome to the umaRhamba cryptographic tool! Our goal is to provide a comprehensive, user-friendly, and secure application for cryptographic operations. Below, you'll find an overview of the initial idea, what this tool currently offers, our future plans, and an open invitation to contributors. 🎉
-🎯 Purpose
+Welcome to **umaRhamba**! This open-source _cryptographic tool_ is designed to aid pen testers, blue-teamers, red-teamers, and network engineers in their cryptographic operations. Our goal is to provide a robust, efficient, and user-friendly solution for various encryption, encoding, hashing, and other cryptographic needs. 🌟
 
-The umaRhamba tool is designed to help users perform various cryptographic operations, including:
+![umaRhamba Logo](placeholder_for_logo_image)
 
-    Symmetric Key Ciphers: Encryption and decryption using algorithms like AES, DES, and ChaCha20.
-    Asymmetric Key Ciphers: Encryption and decryption with RSA, ECDSA, and more.
-    Hash Functions: Generating hashes using algorithms such as SHA-256, SHA-3, and MD5.
-    Message Authentication Codes (MACs): Generating and verifying MACs using HMAC, CMAC, and GMAC.
-    Encoders: Encoding and decoding data with Base64, Hex, and URL encoding.
-    Obfuscation and Exporting: Obfuscating payloads and exporting them in various formats (e.g., .exe, .pdf, .docx).
-    Networking Protocols: Secure communication protocols like TLS/SSL and SSH.
+## Features
 
-🚀 Features
-Current Features
+- **Dashboard**: Overview of the application's activities with a tool to identify hashes, encoders, and ciphers.
+- **Symmetric Key Ciphers**: Support for DES, 3DES, AES, Blowfish, Twofish, IDEA, RC5, RC6, RC4, Salsa20, and ChaCha20.
+- **Asymmetric Key Ciphers**: Support for RSA, DSA, Diffie-Hellman, ECDSA, and ECDH.
+- **Hash Functions**: Support for MD5, SHA-1, SHA-224, SHA-256, SHA-384, SHA-512, SHA-3, RIPEMD, and Whirlpool.
+- **Message Authentication Codes (MACs)**: Support for HMAC, CMAC, and GMAC.
+- **Other Ciphers**: Support for OTP, Vigenère, and Playfair.
+- **Networking Protocols**: Support for TLS/SSL, IPsec, SSH, OpenVPN, and HTTPS.
+- **Crypto Algorithms**: Support for PGP, GPG, and Kerberos.
+- **Encoders**: Support for Base64, Hex, URL encoding, Obfuscation, and Steganography.
+- **File Upload**: Feature to upload a file for obfuscation or steganography.
+- **Clear Output**: Clear text functionality across various tabs.
 
-    Symmetric Key Ciphers: Supports DES, 3DES, AES, Blowfish, Twofish, IDEA, RC5, RC6, RC4, Salsa20, and ChaCha20.
-    Hash Functions: Supports MD5, SHA-1, SHA-224, SHA-256, SHA-384, SHA-512, SHA-3, RIPEMD, and Whirlpool.
+## Installation
 
-To Be Developed
+To get started with umaRhamba, follow these installation steps:
 
-    Asymmetric Key Ciphers: Planned support for RSA, DSA, Diffie-Hellman, ECDSA, and ECDH.
-    MACs: Planned support for HMAC, CMAC, and GMAC.
-    Encoders: Planned support for Base64, Hex, URL encoding, and simple obfuscation.
-    Obfuscation and Exporting: Allow obfuscation of payloads and export to various formats.
-    Networking Protocols: Includes plans for TLS/SSL, IPsec, SSH, OpenVPN, and HTTPS.
+1. **Clone the Repository**
+    ```sh
+    git clone https://github.com/yourusername/umaRhamba.git
+    ```
 
-Planned Features
+2. **Navigate to the Project Directory**
+    ```sh
+    cd umaRhamba
+    ```
 
-    Advanced Key Management: Integration with hardware security modules (HSMs) and cloud-based key management services.
-    Enhanced Password Hashing: Implementation of Argon2 for secure password hashing.
-    Improved GUI: Enhanced user interface with more customization options and responsive design.
-    Detailed Documentation: Comprehensive guides and API documentation using Sphinx.
-    Security Audits: Regular security audits and penetration testing to ensure robustness.
+3. **Install the Dependencies**
+    ```sh
+    pip install -r requirements.txt
+    ```
 
-📅 Roadmap
+4. **Run the Application**
+    ```sh
+    python main.py
+    ```
 
-    Key Management Enhancements: Integrate secure key storage mechanisms and recommendations for HSMs or cloud-based key management services.
-    Password Hashing: Implement Argon2 for password hashing and enhance existing hash functions.
-    GUI Improvements: Use advanced GUI design principles and frameworks like PyQt6 for a modern, responsive user interface.
-    Documentation: Develop detailed documentation and user guides, including setup, usage, and API documentation.
-    Security Enhancements: Conduct regular security audits and penetration tests to ensure the tool's robustness and security.
+## Usage
 
-🔧 Installation
-Dependencies
+- **Dashboard**: Provides an overview of activities and tools to identify various cryptographic elements.
+    ![Dashboard](placeholder_for_dashboard_image)
 
-Ensure you have the following Python packages installed:
+- **Symmetric Key Ciphers**: Encrypt and decrypt data using symmetric key algorithms.
+    ![Symmetric Key Ciphers](placeholder_for_symmetric_ciphers_image)
 
-sh
+- **Asymmetric Key Ciphers**: Use asymmetric algorithms for secure data transmission.
+    ![Asymmetric Key Ciphers](placeholder_for_asymmetric_ciphers_image)
 
-pip install base64 argon2-cffi cryptography PySide6
+- **Hash Functions**: Generate and verify hash values.
+    ![Hash Functions](placeholder_for_hash_functions_image)
 
-Running the Application
+- **MACs**: Generate Message Authentication Codes to ensure data integrity and authenticity.
+    ![MACs](placeholder_for_macs_image)
 
-Clone the Repository:
+- **Encoders**: Encode and decode data using various schemes.
+    ![Encoders](placeholder_for_encoders_image)
 
-sh
+- **File Upload**: Upload files for obfuscation or steganography.
+    ![File Upload](placeholder_for_file_upload_image)
 
-git clone https://github.com/yourusername/umaRhamba.git
-cd umaRhamba
+## Roadmap 🛣️
 
-Install Dependencies:
+### Functional
 
-sh
+- Dashboard identification tool.
+- Symmetric and asymmetric encryption/decryption.
+- Hashing algorithms.
+- Various encoding schemes.
+- Clear output functionality.
 
-pip install -r requirements.txt
+### To Be Implemented
 
-Run the Application:
+- Advanced steganography features.
+- More detailed error handling and reporting.
+- Integration with popular cryptographic libraries for enhanced functionality.
+- Message Authentication Codes (MACs).
+- File upload for obfuscation and steganography.
+- Improved UI/UX based on community feedback.
 
-sh
+## Why umaRhamba?
 
-python3 umaRhamba.py
+**umaRhamba** provides a comprehensive suite of cryptographic tools in one easy-to-use application. Whether you are a pen tester, a member of a blue team, a red team, or a network engineer, umaRhamba can help you:
 
-🤝 Invitation to Contributors
+- **Ensure Data Security**: Encrypt and decrypt data to protect sensitive information.
+- **Verify Data Integrity**: Generate and verify hashes to ensure data has not been tampered with.
+- **Authenticate Messages**: Use MACs to ensure the authenticity and integrity of messages.
+- **Encode and Decode Data**: Convert data into various encoded formats for secure transmission.
+- **Obfuscate and Hide Data**: Use obfuscation and steganography to protect data from unauthorized access.
 
-We invite all developers, cryptography enthusiasts, and security experts to contribute to the umaRhamba project. Whether it's through code contributions, documentation, or security audits, your input is invaluable. Let's work together to make umaRhamba a top-tier cryptographic tool!
-How to Contribute
+## Contributing 🤝
 
-    Fork the Repository: Start by forking the repository on GitHub.
-    Create a Branch: Create a new branch for your feature or bug fix.
-    Submit a Pull Request: Once your changes are ready, submit a pull request for review.
-    Join Discussions: Participate in discussions on issues and pull requests to share your insights and suggestions.
+We welcome contributions from the community! If you are interested in contributing to **umaRhamba**, please fork the repository and submit a pull request. 
 
-Thank you for your interest in the umaRhamba project. Together, we can create a powerful and secure cryptographic tool that benefits everyone. 🌟
+## Feedback
+
+Your feedback is valuable to us. 
+
+---
+
+Thank you for using **umaRhamba**! We look forward to your contributions and feedback. Together, we can enhance the security of our digital world 🌐
