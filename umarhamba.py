@@ -15,10 +15,10 @@ from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 from cryptography.hazmat.primitives.kdf.scrypt import Scrypt
 from PySide6.QtGui import QIcon
-from PySide6.QtWidgets import (QApplication, QFormLayout, QFrame, QHBoxLayout,
-                               QLabel, QLineEdit, QMainWindow, QPushButton,
-                               QSizePolicy, QSpacerItem, QTabWidget, QTextEdit,
-                               QVBoxLayout, QWidget)
+from PySide6.QtWidgets import (QApplication, QFileDialog, QFormLayout, QFrame,
+                               QHBoxLayout, QLabel, QLineEdit, QMainWindow,
+                               QPushButton, QSizePolicy, QSpacerItem,
+                               QTabWidget, QTextEdit, QVBoxLayout, QWidget)
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
@@ -128,7 +128,7 @@ class CryptoApp(QMainWindow):
         input_layout.addWidget(identify_button)
 
         clear_button = QPushButton("Clear Output")
-        clear_button.clicked.connect(self.clear_output)
+        clear_button.clicked.connect(self.clear_dashboard_output)
         input_layout.addWidget(clear_button)
 
         layout.addLayout(input_layout)
@@ -228,7 +228,7 @@ class CryptoApp(QMainWindow):
 
     def init_encoders_tab(self, tab: QWidget) -> None:
         """Initialize the encoders tab."""
-        self.setup_tabs(tab, "Encoder", ["Base64", "Hex", "Steganography", "URL", "Obfuscation"])
+        self.setup_tabs(tab, "Encoder", ["Base64", "Hex", "URL", "Obfuscation", "Steganography"])
 
     def setup_tabs(self, parent_tab: QWidget, item_type: str, items: list) -> None:
         """General method to set up tabs for different types of items."""
@@ -383,78 +383,51 @@ class CryptoApp(QMainWindow):
         layout = QVBoxLayout()
         tab.setLayout(layout)
 
-        if encoder_name == "Obfuscation":
-            description = QLabel("<h3>Obfuscation and Exporting</h3><p>This tab provides tools for obfuscation and exporting payloads into various file formats (e.g., .exe, .pdf, .docx).</p>")
-            description.setWordWrap(True)
-            layout.addWidget(description)
+        description = QLabel(f"<h3>{encoder_name}</h3><p>{self.get_description(encoder_name, 'Encoder')}</p>")
+        description.setWordWrap(True)
+        layout.addWidget(description)
 
-            instructions = QLabel("<p><b>Instructions:</b><br>"
-                                  "1. Enter the payload text you want to obfuscate in the input field.<br>"
-                                  "2. Select the file format for exporting the obfuscated payload.<br>"
-                                  "3. Click the 'Obfuscate and Export' button to obfuscate the text and export it in the selected format.<br>"
-                                  "4. The exported file will be saved in the chosen directory.<br>"
-                                  "</p>")
-            instructions.setWordWrap(True)
-            layout.addWidget(instructions)
+        instructions = QLabel(f"<p><b>Instructions:</b><br>"
+                              f"1. Enter the text you want to encode in the input field.<br>"
+                              f"2. Click the 'Save' button to save the plain text.<br>"
+                              f"3. Click the 'Encode with {encoder_name}' button to encode the text.<br>"
+                              f"4. The encoded text will be displayed in the text area below.<br>"
+                              f"5. Use the 'Clear Output' button to clear the output area.<br>"
+                              f"6. Use the 'Decode with {encoder_name}' button to decode the text.</p>")
+        instructions.setWordWrap(True)
+        layout.addWidget(instructions)
 
-            input_layout = QHBoxLayout()
-            self.payload_entry = QLineEdit()
-            self.payload_entry.setPlaceholderText("Enter payload text to obfuscate")
-            input_layout.addWidget(self.payload_entry)
+        input_layout = QHBoxLayout()
+        text_entry = QLineEdit()
+        text_entry.setPlaceholderText(f"Enter text to encode with {encoder_name}")
+        input_layout.addWidget(text_entry)
 
-            layout.addLayout(input_layout)
+        save_button = QPushButton("Save")
+        save_button.clicked.connect(lambda: self.save_plain_text(text_entry, layout, encoder_name))
+        input_layout.addWidget(save_button)
 
-            file_format_layout = QHBoxLayout()
-            self.file_format_entry = QLineEdit()
-            self.file_format_entry.setPlaceholderText("Enter file format (e.g., .exe, .pdf, .docx)")
-            file_format_layout.addWidget(self.file_format_entry)
+        layout.addLayout(input_layout)
 
-            layout.addLayout(file_format_layout)
+        encode_button = QPushButton(f"Encode with {encoder_name}")
+        encode_button.clicked.connect(lambda: self.encode_text(text_entry, layout, encoder_name))
+        layout.addWidget(encode_button)
 
-            obfuscate_button = QPushButton("Obfuscate and Export")
-            obfuscate_button.clicked.connect(self.obfuscate_and_export)
-            layout.addWidget(obfuscate_button)
-        else:
-            description = QLabel(f"<h3>{encoder_name}</h3><p>{self.get_description(encoder_name, 'Encoder')}</p>")
-            description.setWordWrap(True)
-            layout.addWidget(description)
+        decode_button = QPushButton(f"Decode with {encoder_name}")
+        decode_button.clicked.connect(lambda: self.decode_text(text_entry, layout, encoder_name))
+        layout.addWidget(decode_button)
 
-            instructions = QLabel(f"<p><b>Instructions:</b><br>"
-                                  f"1. Enter the text you want to encode in the input field.<br>"
-                                  f"2. Click the 'Save' button to save the plain text.<br>"
-                                  f"3. Click the 'Encode with {encoder_name}' button to encode the text.<br>"
-                                  f"4. The encoded text will be displayed in the text area below.<br>"
-                                  f"5. Use the 'Clear Output' button to clear the output area.<br>"
-                                  f"6. Use the 'Decode with {encoder_name}' button to decode the text.</p>")
-            instructions.setWordWrap(True)
-            layout.addWidget(instructions)
+        clear_button = QPushButton("Clear Output")
+        clear_button.clicked.connect(lambda: self.clear_output(layout))
+        layout.addWidget(clear_button)
 
-            input_layout = QHBoxLayout()
-            text_entry = QLineEdit()
-            text_entry.setPlaceholderText(f"Enter text to encode with {encoder_name}")
-            input_layout.addWidget(text_entry)
+        response = QTextEdit()
+        response.setReadOnly(True)
+        layout.addWidget(response)
 
-            save_button = QPushButton("Save")
-            save_button.clicked.connect(lambda: self.save_plain_text(text_entry, layout, encoder_name))
-            input_layout.addWidget(save_button)
-
-            layout.addLayout(input_layout)
-
-            encode_button = QPushButton(f"Encode with {encoder_name}")
-            encode_button.clicked.connect(lambda: self.encode_text(text_entry, layout, encoder_name))
-            layout.addWidget(encode_button)
-
-            decode_button = QPushButton(f"Decode with {encoder_name}")
-            decode_button.clicked.connect(lambda: self.decode_text(text_entry, layout, encoder_name))
-            layout.addWidget(decode_button)
-
-            clear_button = QPushButton("Clear Output")
-            clear_button.clicked.connect(lambda: self.clear_output(layout))
-            layout.addWidget(clear_button)
-
-            response = QTextEdit()
-            response.setReadOnly(True)
-            layout.addWidget(response)
+        if encoder_name in ["Obfuscation", "Steganography"]:
+            file_upload_button = QPushButton(f"Upload File for {encoder_name}")
+            file_upload_button.clicked.connect(lambda: self.upload_file(encoder_name))
+            layout.addWidget(file_upload_button)
 
     def encode_text(self, text_entry: QLineEdit, layout: QVBoxLayout, encoder_name: str) -> None:
         """Encode the provided text using the specified encoder."""
@@ -624,6 +597,11 @@ class CryptoApp(QMainWindow):
 
         layout.itemAt(layout.count() - 1).widget().append(f'Generated {mac_name}: {mac_text}')
 
+    def clear_dashboard_output(self) -> None:
+        """Clear the input and output fields on the dashboard."""
+        self.identify_entry.clear()
+        self.identify_response.clear()
+
     def clear_output(self, layout: QVBoxLayout) -> None:
         """Clear the output text area."""
         layout.itemAt(layout.count() - 1).widget().clear()
@@ -666,6 +644,35 @@ class CryptoApp(QMainWindow):
         }
         desc = descriptions.get(name, (f"{type} description not available.", "Use Cases: Not available."))
         return f"{desc[0]}<br><b>Use Cases:</b> {desc[1]}"
+
+    def upload_file(self, encoder_name: str) -> None:
+        """Upload a file for obfuscation or steganography."""
+        options = QFileDialog.Options()
+        file_path, _ = QFileDialog.getOpenFileName(self, f"Upload File for {encoder_name}", "", "All Files (*);;Text Files (*.txt)", options=options)
+        if file_path:
+            with open(file_path, 'r') as file:
+                file_content = file.read()
+            if encoder_name == "Obfuscation":
+                self.obfuscate_file(file_content, file_path)
+            elif encoder_name == "Steganography":
+                self.steganography_file(file_content, file_path)
+
+    def obfuscate_file(self, content: str, file_path: str) -> None:
+        """Obfuscate the content of the uploaded file."""
+        obfuscated_content = base64.b64encode(content.encode()).decode()  # Simple obfuscation example
+        new_file_path = file_path + ".obfuscated"
+        with open(new_file_path, 'w') as file:
+            file.write(obfuscated_content)
+        self.identify_response.append(f"File obfuscated and saved as {new_file_path}")
+
+    def steganography_file(self, content: str, file_path: str) -> None:
+        """Perform steganography on the uploaded file."""
+        # Placeholder for steganography implementation
+        steganography_content = "Steganography not implemented."
+        new_file_path = file_path + ".stego"
+        with open(new_file_path, 'w') as file:
+            file.write(steganography_content)
+        self.identify_response.append(f"File processed for steganography and saved as {new_file_path}")
 
 def whirlpool(data: bytes) -> str:
     """Compute the Whirlpool hash of the given data."""
