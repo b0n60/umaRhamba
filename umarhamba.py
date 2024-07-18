@@ -181,46 +181,16 @@ class CryptoApp(QMainWindow):
             'Blake2b': re.compile(r'^[a-f0-9]{128}$', re.IGNORECASE),  # Blake2b produces 128 char hash
             'Argon2': re.compile(r'^[a-zA-Z0-9/+]{64}$', re.IGNORECASE)  # Common representation of Argon2
         }
-
-        crypto_algorithms = {
-            'PGP': re.compile(r'pgp', re.IGNORECASE),
-            'GPG': re.compile(r'gpg', re.IGNORECASE),
-            'Kerberos': re.compile(r'kerberos', re.IGNORECASE),
-            'Post-Quantum Cryptography': re.compile(r'post-quantum cryptography', re.IGNORECASE),
-            'Homomorphic Encryption': re.compile(r'homomorphic encryption', re.IGNORECASE),
-            'Zero-Knowledge Proofs': re.compile(r'zero-knowledge proofs', re.IGNORECASE),
-            'Advanced Key Management': re.compile(r'advanced key management', re.IGNORECASE)
-        }
-
-        encoders = {
-            'Base64': self.is_base64,
-            'Hex': self.is_hex,
-            'URL': self.is_url,
-            'Obfuscation': re.compile(r'obfuscation', re.IGNORECASE),
-            'Steganography': re.compile(r'steganography', re.IGNORECASE),
-            'LSB': re.compile(r'lsb', re.IGNORECASE),
-            'Audio Steganography': re.compile(r'audio steganography', re.IGNORECASE),
-            'Base32': re.compile(r'^[A-Z2-7]+=*$', re.IGNORECASE),
-            'Base58': re.compile(r'^[123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz]+$', re.IGNORECASE),
-            'QR Code': re.compile(r'qr code', re.IGNORECASE),
-            'Data Masking': re.compile(r'data masking', re.IGNORECASE)
-        }
-
+        
         for hash_type, pattern in hash_patterns.items():
             if pattern.match(text):
                 return hash_type
         
-        for algo, pattern in crypto_algorithms.items():
-            if pattern.match(text):
-                return algo
-        
-        for encoder, checker in encoders.items():
-            if callable(checker):
-                if checker(text):
-                    return encoder
-            else:
-                if checker.match(text):
-                    return encoder
+        # Check for encoders
+        if self.is_base64(text):
+            return 'Base64'
+        if self.is_hex(text):
+            return 'Hex'
         
         return None
 
@@ -239,14 +209,6 @@ class CryptoApp(QMainWindow):
             bytes.fromhex(s)
             return True
         except ValueError:
-            return False
-
-    def is_url(self, s: str) -> bool:
-        """Check if the string is a URL encoded."""
-        try:
-            result = re.match(r'^(http|https|ftp)://[a-zA-Z0-9.-]+(?:/[^/]*|/*)$', s)
-            return bool(result)
-        except Exception:
             return False
 
     def init_symmetric_tab(self, tab: QWidget) -> None:
