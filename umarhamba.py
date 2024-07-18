@@ -90,7 +90,6 @@ class CryptoApp(QMainWindow):
             ("Asymmetric Key Ciphers", self.init_asymmetric_tab),
             ("Hash Functions", self.init_hash_tab),
             ("MACs", self.init_mac_tab),
-            ("Other Ciphers", self.init_other_ciphers_tab),
             ("Networking Protocols", self.init_network_tab),
             ("Crypto Algorithms", self.init_crypto_algorithms_tab),
             ("Encoders", self.init_encoders_tab),
@@ -121,6 +120,7 @@ class CryptoApp(QMainWindow):
         input_layout = QHBoxLayout()
         self.identify_entry = QLineEdit()
         self.identify_entry.setPlaceholderText("Enter text to identify hash, encoder, or cipher")
+        self.identify_entry.textChanged.connect(self.incremental_identify)
         input_layout.addWidget(self.identify_entry)
 
         identify_button = QPushButton("Identify")
@@ -136,6 +136,17 @@ class CryptoApp(QMainWindow):
         self.identify_response = QTextEdit()
         self.identify_response.setReadOnly(True)
         layout.addWidget(self.identify_response)
+
+    def incremental_identify(self):
+        """Incrementally identify the type of the provided text as the user types."""
+        text = self.identify_entry.text().strip()
+        if text:
+            identifier = self.get_identifier_type(text)
+            if identifier:
+                identified = f"Identified type for '{text}': {identifier}"
+            else:
+                identified = "Hash type could not be identified."
+            self.identify_response.setText(identified)
 
     def identify_text(self) -> None:
         """Identify the type of the provided text."""
@@ -167,17 +178,49 @@ class CryptoApp(QMainWindow):
             'SHA-3-512': re.compile(r'^[a-f0-9]{128}$', re.IGNORECASE), # Same length as SHA-512
             'RIPEMD-160': re.compile(r'^[a-f0-9]{40}$', re.IGNORECASE),
             'Whirlpool': re.compile(r'^[a-f0-9]{128}$', re.IGNORECASE),  # Same length as SHA-512
+            'Blake2b': re.compile(r'^[a-f0-9]{128}$', re.IGNORECASE),  # Blake2b produces 128 char hash
+            'Argon2': re.compile(r'^[a-zA-Z0-9/+]{64}$', re.IGNORECASE)  # Common representation of Argon2
         }
-        
+
+        crypto_algorithms = {
+            'PGP': re.compile(r'pgp', re.IGNORECASE),
+            'GPG': re.compile(r'gpg', re.IGNORECASE),
+            'Kerberos': re.compile(r'kerberos', re.IGNORECASE),
+            'Post-Quantum Cryptography': re.compile(r'post-quantum cryptography', re.IGNORECASE),
+            'Homomorphic Encryption': re.compile(r'homomorphic encryption', re.IGNORECASE),
+            'Zero-Knowledge Proofs': re.compile(r'zero-knowledge proofs', re.IGNORECASE),
+            'Advanced Key Management': re.compile(r'advanced key management', re.IGNORECASE)
+        }
+
+        encoders = {
+            'Base64': self.is_base64,
+            'Hex': self.is_hex,
+            'URL': self.is_url,
+            'Obfuscation': re.compile(r'obfuscation', re.IGNORECASE),
+            'Steganography': re.compile(r'steganography', re.IGNORECASE),
+            'LSB': re.compile(r'lsb', re.IGNORECASE),
+            'Audio Steganography': re.compile(r'audio steganography', re.IGNORECASE),
+            'Base32': re.compile(r'^[A-Z2-7]+=*$', re.IGNORECASE),
+            'Base58': re.compile(r'^[123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz]+$', re.IGNORECASE),
+            'QR Code': re.compile(r'qr code', re.IGNORECASE),
+            'Data Masking': re.compile(r'data masking', re.IGNORECASE)
+        }
+
         for hash_type, pattern in hash_patterns.items():
             if pattern.match(text):
                 return hash_type
         
-        # Check for encoders
-        if self.is_base64(text):
-            return 'Base64'
-        if self.is_hex(text):
-            return 'Hex'
+        for algo, pattern in crypto_algorithms.items():
+            if pattern.match(text):
+                return algo
+        
+        for encoder, checker in encoders.items():
+            if callable(checker):
+                if checker(text):
+                    return encoder
+            else:
+                if checker.match(text):
+                    return encoder
         
         return None
 
@@ -198,37 +241,44 @@ class CryptoApp(QMainWindow):
         except ValueError:
             return False
 
+    def is_url(self, s: str) -> bool:
+        """Check if the string is a URL encoded."""
+        try:
+            result = re.match(r'^(http|https|ftp)://[a-zA-Z0-9.-]+(?:/[^/]*|/*)$', s)
+            return bool(result)
+        except Exception:
+            return False
+
     def init_symmetric_tab(self, tab: QWidget) -> None:
         """Initialize the symmetric key ciphers tab."""
-        self.setup_tabs(tab, "Symmetric Key Cipher", ["DES", "3DES", "AES", "Blowfish", "Twofish", "IDEA", "RC5", "RC6", "RC4", "Salsa20", "ChaCha20"])
+        self.setup_tabs(tab, "Symmetric Key Cipher", ["DES", "3DES", "AES", "Blowfish", "Twofish", "IDEA", "RC5", "RC6", "RC4", "XOR", "ROT13", "ROT47", "Salsa20", "ChaCha20", "ChaCha20-Poly1305", "CTR", "XChaCha20", "Extended Vigenère", "Playfair"])
 
     def init_asymmetric_tab(self, tab: QWidget) -> None:
         """Initialize the asymmetric key ciphers tab."""
-        self.setup_tabs(tab, "Asymmetric Key Cipher", ["RSA", "DSA", "Diffie-Hellman", "ECDSA", "ECDH"])
+        self.setup_tabs(tab, "Asymmetric Key Cipher", ["RSA", "DSA", "Diffie-Hellman", "ECDSA", "ECDH", "Ed25519", "ECC (Curve25519)"])
 
     def init_hash_tab(self, tab: QWidget) -> None:
         """Initialize the hash functions tab."""
-        self.setup_tabs(tab, "Hash Function", ["MD5", "SHA-1", "SHA-224", "SHA-256", "SHA-384", "SHA-512", "SHA-3", "RIPEMD", "Whirlpool"])
+        self.setup_tabs(tab, "Hash Function", ["MD5", "SHA-1", "SHA-224", "SHA-256", "SHA-384", "SHA-512", "SHA-3", "RIPEMD", "Whirlpool", "Blake2", "Argon2"])
 
     def init_mac_tab(self, tab: QWidget) -> None:
         """Initialize the MACs (Message Authentication Codes) tab."""
-        self.setup_tabs(tab, "MAC", ["HMAC", "CMAC", "GMAC"])
-
-    def init_other_ciphers_tab(self, tab: QWidget) -> None:
-        """Initialize the other ciphers tab."""
-        self.setup_tabs(tab, "Other Cipher", ["OTP", "Vigenère", "Playfair"])
+        self.setup_tabs(tab, "MAC", ["HMAC", "CMAC", "GMAC", "Lattice-Based MAC", "Hash-Based MAC", "Time-Based MAC", "Context-Based MAC", "Threshold MAC", "Distributed MAC"])
 
     def init_network_tab(self, tab: QWidget) -> None:
         """Initialize the networking protocols tab."""
-        self.setup_tabs(tab, "Network Protocol", ["TLS/SSL", "IPsec", "SSH", "OpenVPN", "HTTPS"])
+        self.setup_tabs(tab, "Network Protocol", [
+            "TLS/SSL", "IPsec", "SSH", "OpenVPN", "HTTPS", "Decentralized Identity", 
+            "SMPC", "Confidential Computing", "Dynamic Spectrum Access", "5G and Beyond",
+            "AI and ML Integration", "Blockchain-Based Secure Routing", "Self-Healing Networks"])
 
     def init_crypto_algorithms_tab(self, tab: QWidget) -> None:
         """Initialize the crypto algorithms tab."""
-        self.setup_tabs(tab, "Crypto Algorithm", ["PGP", "GPG", "Kerberos"])
+        self.setup_tabs(tab, "Crypto Algorithm", ["PGP", "GPG", "Kerberos", "Post-Quantum Cryptography", "Homomorphic Encryption", "Zero-Knowledge Proofs", "Advanced Key Management"])
 
     def init_encoders_tab(self, tab: QWidget) -> None:
         """Initialize the encoders tab."""
-        self.setup_tabs(tab, "Encoder", ["Base64", "Hex", "URL", "Obfuscation", "Steganography"])
+        self.setup_tabs(tab, "Encoder", ["Base64", "Hex", "URL", "Obfuscation", "Steganography", "LSB", "Audio Steganography", "Base32", "Base58", "QR Code", "Data Masking"])
 
     def setup_tabs(self, parent_tab: QWidget, item_type: str, items: list) -> None:
         """General method to set up tabs for different types of items."""
@@ -241,7 +291,7 @@ class CryptoApp(QMainWindow):
         for item in items:
             tab = QWidget()
             sub_tabs.addTab(tab, item)
-            if item_type == "Symmetric Key Cipher" or item_type == "Asymmetric Key Cipher" or item_type == "Other Cipher" or item_type == "Network Protocol" or item_type == "Crypto Algorithm":
+            if item_type in ["Symmetric Key Cipher", "Asymmetric Key Cipher", "Network Protocol", "Crypto Algorithm"]:
                 self.setup_cipher_tab(tab, item, item_type)
             elif item_type == "Hash Function":
                 self.setup_hash_tab(tab, item)
@@ -576,6 +626,14 @@ class CryptoApp(QMainWindow):
 
             elif hash_name == "Whirlpool":
                 hashed_text = whirlpool(plain_text)
+
+            elif hash_name == "Blake2":
+                from hashlib import blake2b
+                hashed_text = blake2b(plain_text).hexdigest()
+
+            elif hash_name == "Argon2":
+                ph = PasswordHasher()
+                hashed_text = ph.hash(plain_text.decode())
         except Exception as e:
             hashed_text = f"Hashing failed: {str(e)}"
 
@@ -592,6 +650,24 @@ class CryptoApp(QMainWindow):
                 h = hmac.HMAC(key, hashes.SHA256(), backend=default_backend())
                 h.update(text)
                 mac_text = h.finalize().hex()
+            elif mac_name == "Lattice-Based MAC":
+                # Placeholder for lattice-based MAC implementation
+                mac_text = "Lattice-based MAC not yet implemented."
+            elif mac_name == "Hash-Based MAC":
+                # Placeholder for hash-based MAC implementation
+                mac_text = "Hash-based MAC not yet implemented."
+            elif mac_name == "Time-Based MAC":
+                # Placeholder for time-based MAC implementation
+                mac_text = "Time-based MAC not yet implemented."
+            elif mac_name == "Context-Based MAC":
+                # Placeholder for context-based MAC implementation
+                mac_text = "Context-based MAC not yet implemented."
+            elif mac_name == "Threshold MAC":
+                # Placeholder for threshold MAC implementation
+                mac_text = "Threshold MAC not yet implemented."
+            elif mac_name == "Distributed MAC":
+                # Placeholder for distributed MAC implementation
+                mac_text = "Distributed MAC not yet implemented."
         except Exception as e:
             mac_text = f"MAC generation failed: {str(e)}"
 
