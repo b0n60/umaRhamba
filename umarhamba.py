@@ -432,14 +432,29 @@ class CryptoApp(QMainWindow):
         clear_button.clicked.connect(lambda: self.clear_output(layout))
         layout.addWidget(clear_button)
 
-        response = QTextEdit()
-        response.setReadOnly(True)
-        layout.addWidget(response)
+        if encoder_name == "Obfuscation":
+            payload_entry = QLineEdit()
+            payload_entry.setPlaceholderText("Enter payload text")
+            file_format_entry = QLineEdit()
+            file_format_entry.setPlaceholderText("File extension (e.g., .txt)")
+            export_button = QPushButton("Obfuscate & Export")
+            export_button.clicked.connect(
+                lambda: self.obfuscate_and_export(
+                    payload_entry, file_format_entry, layout
+                )
+            )
+            layout.addWidget(payload_entry)
+            layout.addWidget(file_format_entry)
+            layout.addWidget(export_button)
 
         if encoder_name in ["Obfuscation", "Steganography"]:
             file_upload_button = QPushButton(f"Upload File for {encoder_name}")
             file_upload_button.clicked.connect(lambda: self.upload_file(encoder_name))
             layout.addWidget(file_upload_button)
+
+        response = QTextEdit()
+        response.setReadOnly(True)
+        layout.addWidget(response)
 
     def encode_text(self, text_entry: QLineEdit, layout: QVBoxLayout, encoder_name: str) -> None:
         """Encode the provided text using the specified encoder."""
@@ -488,23 +503,35 @@ class CryptoApp(QMainWindow):
 
         layout.itemAt(layout.count() - 1).widget().append(f'Decoded text with {encoder_name}: {decoded_text}')
 
-    def obfuscate_and_export(self) -> None:
+    def obfuscate_and_export(
+        self,
+        payload_entry: QLineEdit,
+        file_format_entry: QLineEdit,
+        layout: QVBoxLayout,
+    ) -> None:
         """Obfuscate the provided text and export it in the specified format."""
-        payload_text = self.payload_entry.text()
-        file_format = self.file_format_entry.text()
+        payload_text = payload_entry.text()
+        file_format = file_format_entry.text()
 
         if not payload_text or not file_format:
+            layout.itemAt(layout.count() - 1).widget().append(
+                "Payload text and file format are required."
+            )
             return
 
-        obfuscated_text = base64.b64encode(payload_text.encode()).decode()  # Simple obfuscation example
+        obfuscated_text = base64.b64encode(payload_text.encode()).decode()
 
         file_name = f"obfuscated_payload{file_format}"
         try:
-            with open(file_name, 'w') as file:
+            with open(file_name, "w") as file:
                 file.write(obfuscated_text)
-            self.identify_response.append(f"Payload exported as {file_name}")
+            layout.itemAt(layout.count() - 1).widget().append(
+                f"Payload exported as {file_name}"
+            )
         except Exception as e:
-            self.identify_response.append(f"Export failed: {str(e)}")
+            layout.itemAt(layout.count() - 1).widget().append(
+                f"Export failed: {str(e)}"
+            )
 
     def save_plain_text(self, text_entry: QLineEdit, layout: QVBoxLayout, name: str) -> None:
         """Save the plain text input for later use."""
