@@ -3,7 +3,6 @@ import logging
 import re
 import sys
 from hashlib import md5, sha1, sha3_256, sha224, sha256, sha384, sha512
-from typing import Any, Tuple
 
 from argon2 import PasswordHasher
 from Crypto.Hash import RIPEMD160  # PyCryptodome library
@@ -22,6 +21,7 @@ from PySide6.QtWidgets import (QApplication, QFileDialog, QFormLayout, QFrame,
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 def load_stylesheet() -> str:
     """Load the application's stylesheet."""
@@ -458,6 +458,7 @@ class CryptoApp(QMainWindow):
 
     def encode_text(self, text_entry: QLineEdit, layout: QVBoxLayout, encoder_name: str) -> None:
         """Encode the provided text using the specified encoder."""
+        logger.info("Encoding text using %s", encoder_name)
         plain_text = text_entry.text().encode()
 
         if encoder_name == "Base64":
@@ -476,10 +477,12 @@ class CryptoApp(QMainWindow):
         else:
             encoded_text = "Encoding not implemented for this encoder."
 
+        logger.info("Finished encoding text using %s", encoder_name)
         layout.itemAt(layout.count() - 1).widget().append(f'Encoded text with {encoder_name}: {encoded_text}')
 
     def decode_text(self, text_entry: QLineEdit, layout: QVBoxLayout, encoder_name: str) -> None:
         """Decode the provided text using the specified encoder."""
+        logger.info("Decoding text using %s", encoder_name)
         encoded_text = text_entry.text().encode()
 
         try:
@@ -501,6 +504,7 @@ class CryptoApp(QMainWindow):
         except Exception as e:
             decoded_text = f"Decoding failed: {str(e)}"
 
+        logger.info("Finished decoding text using %s", encoder_name)
         layout.itemAt(layout.count() - 1).widget().append(f'Decoded text with {encoder_name}: {decoded_text}')
 
     def obfuscate_and_export(
@@ -510,6 +514,7 @@ class CryptoApp(QMainWindow):
         layout: QVBoxLayout,
     ) -> None:
         """Obfuscate the provided text and export it in the specified format."""
+        logger.info("Obfuscating text and exporting to file")
         payload_text = payload_entry.text()
         file_format = file_format_entry.text()
 
@@ -528,10 +533,12 @@ class CryptoApp(QMainWindow):
             layout.itemAt(layout.count() - 1).widget().append(
                 f"Payload exported as {file_name}"
             )
+            logger.info("Payload exported to %s", file_name)
         except Exception as e:
             layout.itemAt(layout.count() - 1).widget().append(
                 f"Export failed: {str(e)}"
             )
+            logger.error("Export failed: %s", str(e))
 
     def save_plain_text(self, text_entry: QLineEdit, layout: QVBoxLayout, name: str) -> None:
         """Save the plain text input for later use."""
@@ -540,6 +547,7 @@ class CryptoApp(QMainWindow):
 
     def encrypt_text(self, text_entry: QLineEdit, layout: QVBoxLayout, cipher_name: str) -> None:
         """Encrypt the provided text using the specified cipher."""
+        logger.info("Encrypting text using %s", cipher_name)
         plain_text = text_entry.text().encode()
         encrypted_text = "Encryption not implemented for this cipher."
 
@@ -555,13 +563,16 @@ class CryptoApp(QMainWindow):
                 encrypted_text = base64.b64encode(encrypted_text).decode()
         except (InvalidKey, InvalidSignature, InvalidTag) as e:
             encrypted_text = f"Encryption failed: {str(e)}"
+            logger.error("Encryption failed: %s", str(e))
         except Exception as e:
             encrypted_text = f"Encryption failed: {str(e)}"
-
+            logger.error("Encryption failed: %s", str(e))
+        logger.info("Finished encrypting text using %s", cipher_name)
         layout.itemAt(layout.count() - 1).widget().append(f'Encrypted text with {cipher_name}: {encrypted_text}')
 
     def decrypt_text(self, text_entry: QLineEdit, layout: QVBoxLayout, cipher_name: str) -> None:
         """Decrypt the provided text using the specified cipher."""
+        logger.info("Decrypting text using %s", cipher_name)
         encrypted_text = text_entry.text().encode()
         decrypted_text = "Decryption not implemented for this cipher."
 
@@ -578,13 +589,16 @@ class CryptoApp(QMainWindow):
                 decrypted_text = decrypted_text.decode()
         except (InvalidKey, InvalidSignature, InvalidTag) as e:
             decrypted_text = f"Decryption failed: {str(e)}"
+            logger.error("Decryption failed: %s", str(e))
         except Exception as e:
             decrypted_text = f"Decryption failed: {str(e)}"
-
+            logger.error("Decryption failed: %s", str(e))
+        logger.info("Finished decrypting text using %s", cipher_name)
         layout.itemAt(layout.count() - 1).widget().append(f'Decrypted text with {cipher_name}: {decrypted_text}')
 
     def hash_text(self, text_entry: QLineEdit, layout: QVBoxLayout, hash_name: str) -> None:
         """Hash the provided text using the specified hash function."""
+        logger.info("Hashing text using %s", hash_name)
         plain_text = text_entry.text().encode()
         hashed_text = "Hashing not implemented for this hash function."
 
@@ -625,11 +639,13 @@ class CryptoApp(QMainWindow):
                 hashed_text = ph.hash(plain_text.decode())
         except Exception as e:
             hashed_text = f"Hashing failed: {str(e)}"
-
+            logger.error("Hashing failed: %s", str(e))
+        logger.info("Finished hashing text using %s", hash_name)
         layout.itemAt(layout.count() - 1).widget().append(f'Hashed text with {hash_name}: {hashed_text}')
 
     def generate_mac(self, text_entry: QLineEdit, layout: QVBoxLayout, mac_name: str) -> None:
         """Generate a MAC for the provided text using the specified algorithm."""
+        logger.info("Generating MAC using %s", mac_name)
         text = text_entry.text().encode()
         mac_text = "MAC generation not implemented for this algorithm."
 
@@ -659,7 +675,8 @@ class CryptoApp(QMainWindow):
                 mac_text = "Distributed MAC not yet implemented."
         except Exception as e:
             mac_text = f"MAC generation failed: {str(e)}"
-
+            logger.error("MAC generation failed: %s", str(e))
+        logger.info("Finished generating MAC using %s", mac_name)
         layout.itemAt(layout.count() - 1).widget().append(f'Generated {mac_name}: {mac_text}')
 
     def clear_dashboard_output(self) -> None:
@@ -712,6 +729,7 @@ class CryptoApp(QMainWindow):
 
     def upload_file(self, encoder_name: str) -> None:
         """Upload a file for obfuscation or steganography."""
+        logger.info("Uploading file for %s", encoder_name)
         options = QFileDialog.Options()
         file_path, _ = QFileDialog.getOpenFileName(self, f"Upload File for {encoder_name}", "", "All Files (*);;Text Files (*.txt)", options=options)
         if file_path:
@@ -721,23 +739,28 @@ class CryptoApp(QMainWindow):
                 self.obfuscate_file(file_content, file_path)
             elif encoder_name == "Steganography":
                 self.steganography_file(file_content, file_path)
+            logger.info("File upload processing complete for %s", encoder_name)
 
     def obfuscate_file(self, content: str, file_path: str) -> None:
         """Obfuscate the content of the uploaded file."""
+        logger.info("Obfuscating file %s", file_path)
         obfuscated_content = base64.b64encode(content.encode()).decode()  # Simple obfuscation example
         new_file_path = file_path + ".obfuscated"
         with open(new_file_path, 'w') as file:
             file.write(obfuscated_content)
         self.identify_response.append(f"File obfuscated and saved as {new_file_path}")
+        logger.info("File obfuscated and saved as %s", new_file_path)
 
     def steganography_file(self, content: str, file_path: str) -> None:
         """Perform steganography on the uploaded file."""
         # Placeholder for steganography implementation
+        logger.info("Performing steganography on file %s", file_path)
         steganography_content = "Steganography not implemented."
         new_file_path = file_path + ".stego"
         with open(new_file_path, 'w') as file:
             file.write(steganography_content)
         self.identify_response.append(f"File processed for steganography and saved as {new_file_path}")
+        logger.info("Steganography file saved as %s", new_file_path)
 
 def whirlpool(data: bytes) -> str:
     """Compute the Whirlpool hash of the given data."""
