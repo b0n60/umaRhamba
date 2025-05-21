@@ -16,6 +16,7 @@ Welcome to **umaRhamba**! This open-source _cryptographic tool_ is designed to a
 - **Crypto Algorithms**: Support for PGP, GPG, and Kerberos.
 - **Encoders**: Support for Base64, Hex, URL encoding, Obfuscation, and Steganography.
 - **File Upload**: Feature to upload a file for obfuscation or steganography.
+- **Obfuscate & Export**: Convert a text payload into Base64 and save it with a chosen extension.
 - **Clear Output**: Clear text functionality across various tabs.
 
 ## Installation
@@ -87,6 +88,7 @@ To get started with umaRhamba, follow these installation steps:
 - **Authenticate Messages**: Use MACs to ensure the authenticity and integrity of messages.
 - **Encode and Decode Data**: Convert data into various encoded formats for secure transmission.
 - **Obfuscate and Hide Data**: Use obfuscation and steganography to protect data from unauthorized access.
+    - Use the **Obfuscate & Export** button in the Obfuscation tab to save a base64-obfuscated payload with your chosen file extension.
 
 ## Contributing 🤝
 
