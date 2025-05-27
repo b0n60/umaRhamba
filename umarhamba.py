@@ -2,6 +2,8 @@ import base64
 import logging
 import re
 import sys
+import os # Added for os.urandom
+from functools import partial # Added for partial functions in connects
 from hashlib import md5, sha1, sha3_256, sha224, sha256, sha384, sha512
 
 from argon2 import PasswordHasher
@@ -14,8 +16,8 @@ from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 from cryptography.hazmat.primitives.kdf.scrypt import Scrypt
 from PySide6.QtGui import QIcon
-from PySide6.QtWidgets import (QApplication, QFileDialog, QFormLayout, QFrame,
-                               QHBoxLayout, QLabel, QLineEdit, QMainWindow,
+from PySide6.QtWidgets import (QApplication, QFileDialog, QFormLayout, QFrame, QComboBox, # Added QComboBox
+                               QHBoxLayout, QLabel, QLineEdit, QMainWindow, QMessageBox, # Added QMessageBox
                                QPushButton, QSizePolicy, QSpacerItem,
                                QTabWidget, QTextEdit, QVBoxLayout, QWidget)
 
@@ -69,6 +71,7 @@ class CryptoApp(QMainWindow):
 
     def __init__(self):
         super().__init__()
+        self.symmetric_ui_elements = {} # For storing UI elements of symmetric cipher tabs
         self.init_ui()
 
     def init_ui(self) -> None:
